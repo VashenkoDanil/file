@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <style>
+        .hidden{visibility: hidden;}
+        body {
+    font: 12px Arial, sans-serif;
+}
+
+#dropZone {
+    color: #555;
+    font-size: 18px;
+    text-align: center;
+
+    width: 400px;
+    padding: 50px 0;
+    margin: 50px auto;
+
+    background: #eee;
+    border: 1px solid #ccc;
+
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+#dropZone.hover {
+    background: #ddd;
+    border-color: #aaa;
+}
+
+#dropZone.error {
+    background: #faa;
+    border-color: #f00;
+}
+
+#dropZone.drop {
+    background: #afa;
+    border-color: #0f0;
+}
+    </style>
+</head>
+<body>
+    <input type="button" id="add_form_file" value="Добвить файл" />
+    <br /><br />
+
+    <form enctype="multipart/form-data" method="POST" id="multiple_files_form">
+        {% csrf_token %}
+        <div id="dropZone">
+        Для загрузки, перетащите файл сюда.
+        </div>
+        <div class="file"><input name="file" type="file" /><input type="button" class="delete_file" value="Удалить" /><br /></div>
+    </form>
+
+    <br /><input type="submit" form="multiple_files_form" value="Отправить файлы" />
+
+
+
+    <div class="hidden">
+        <div class="file"><input name="file" type="file" /><input type="button" class="delete_file" value="Удалить" /><br /></div>
+    </div>
+
+
+
+    <script>
+        $('#add_form_file').on('click', function () {
+            $('form').append($('.hidden').html());
+        });
+
+        $('form').on('click', '.delete_file', function () {
+            $(this).parent('.file').remove();
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            var dropZone = $('#dropZone'),
+            maxFileSize = 1000000; // максимальный размер файла - 1 мб.
+            if (typeof(window.FileReader) == 'undefined') {
+                dropZone.text('Не поддерживается браузером!');
+                dropZone.addClass('error');
+            }
+            dropZone[0].ondragover = function() {
+                dropZone.addClass('hover');
+                return false;
+            };
+
+            dropZone[0].ondragleave = function() {
+                dropZone.removeClass('hover');
+                return false;
+            };
+
+            dropZone[0].ondrop = function(event) {
+                event.preventDefault();
+                dropZone.removeClass('hover');
+                dropZone.addClass('drop');
+                var file = event.dataTransfer.files[0];
+                console.log(file);
+                if (file.size > maxFileSize) {
+                    dropZone.text('Файл слишком большой!');
+                    dropZone.addClass('error');
+                    return false;
+                }
+            };
+        });
+    </script>
+</body>
+</html>
