@@ -5,7 +5,54 @@
     <title>Title</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <style>
-        .hidden{visibility: hidden;}
+        .hidden{
+            visibility: hidden;
+        }
+
+        body {
+            font: 12px Arial, sans-serif;
+        }
+
+        .file {
+            width: 600px;
+            font-size: 16px;
+            padding: 10px 0;
+        }
+
+        .delete_file {
+            float: right;
+        }
+
+        #dropZone {
+            color: #555;
+            font-size: 18px;
+            text-align: center;
+
+            width: 600px;
+            padding: 50px 0;
+
+            background: #eee;
+            border: 1px solid #ccc;
+
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+        }
+
+        #dropZone.hover {
+            background: #ddd;
+            border-color: #aaa;
+        }
+
+        #dropZone.error {
+            background: #faa;
+            border-color: #f00;
+        }
+
+        #dropZone.drop {
+            background: #afa;
+            border-color: #0f0;
+        }
     </style>
 </head>
 <body>
@@ -14,6 +61,7 @@
 
     <form enctype="multipart/form-data" method="POST" id="multiple_files_form">
         {% csrf_token %}
+        <div id="dropZone">Для загрузки, перетащите файл сюда.</div><br />
         <div class="file"><input name="file" type="file" /><input type="button" class="delete_file" value="Удалить" /><br /></div>
     </form>
 
@@ -27,15 +75,60 @@
 
 
 
-    <script>
-        $('#add_form_file').on('click', function () {
-            $('form').append($('.hidden').html());
-        });
 
-        $('form').on('click', '.delete_file', function () {
-            $(this).parent('.file').remove();
+    <script>
+        $(document).ready(function() {
+            var mas = [];
+            var dropZone = $('#dropZone');
+            if (typeof(window.FileReader) == 'undefined') {
+                dropZone.text('Не поддерживается браузером!');
+                dropZone.addClass('error');
+            } else {
+                dropZone[0].ondragover = function() {
+                    dropZone.addClass('hover');
+                    return false;
+                };
+
+                dropZone[0].ondragleave = function() {
+                    dropZone.removeClass('hover');
+                    return false;
+                };
+
+                dropZone[0].ondrop = function(event) {
+                    event.preventDefault();
+                    dropZone.removeClass('hover');
+                    let file = event.dataTransfer.files[0];
+                    mas.push(file);
+                    $('form').append('<div class="file"><div class="file_name">'+file.name+'</div><input type="button" class="delete_file" value="Удалить" /><br /></div>');
+                };
+            }
+
+            $('#add_form_file').on('click', function () {
+                 $('form').append($('.hidden').html());
+            });
+
+            $('form').on('click', '.delete_file', function () {
+                let file_name = $(this).prev().text();
+                for(let i in mas) {
+                    if (mas[i]['name'] === file_name) {
+                        mas.splice(i, 1);
+                        break;
+                    }
+                }
+                $(this).parent('.file').remove();
+            });
+            
+            $('form').submit(function ( event ) {
+                event.preventDefault();
+                let formData = new FormData($('form')[0]);
+                mas.forEach(function(item, i, m) {
+                    formData.append('file_'+i, item);
+                });
+                let request = new XMLHttpRequest();
+                request.open("POST", "/");
+                request.send(formData);
+            });
         });
     </script>
-
 </body>
 </html>
