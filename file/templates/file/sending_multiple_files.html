@@ -125,7 +125,7 @@
                     formData.append('file_'+i, item);
                 });
                 let request = new XMLHttpRequest();
-                request.open("POST", "/");
+                request.open("POST", document.URL);
                 request.send(formData);
             });
         });
